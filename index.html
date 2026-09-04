@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bekantan Quest: The River & Canopy Guardian | STI7356 ULM</title>
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐒</text></svg>">
+</head>
+<body>
+
+    <!-- Header & Navigation -->
+    <header class="game-header">
+        <div class="brand">
+            <span style="font-size: 1.6rem;">🐒</span>
+            <div>
+                <h1>Bekantan Quest</h1>
+                <span class="badge-course">STI7356 · FT ULM</span>
+            </div>
+        </div>
+        <div class="header-controls">
+            <button id="btnDebug" class="btn-header" title="Toggle Inspector Mode (F1)">🛠️ Inspector [F1]</button>
+            <button id="btnMute" class="btn-header" title="Mute / Unmute Audio">🔊 Suara: Aktif</button>
+        </div>
+    </header>
+
+    <!-- Game Viewport Container -->
+    <main class="game-container" id="gameViewport">
+        <!-- Canvas Utama -->
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- HUD (Heads-Up Display) -->
+        <div class="hud-overlay" id="gameHUD">
+            <div class="hud-left">
+                <div class="hud-item" id="hudHearts">❤️❤️❤️</div>
+                <div class="hud-item">
+                    <span>Skor:</span>
+                    <span id="hudScore" style="color: #FFD700;">0</span>
+                </div>
+            </div>
+            <div class="hud-center" id="hudLevelName">Level 1: Taman Mangrove Barito</div>
+            <div class="hud-right">
+                <div class="hud-item" id="hudFruits">0 🍎</div>
+                <div class="hud-item" id="hudDiamonds">0 💎</div>
+                <div class="hud-item" style="font-size: 0.8rem; color: #80DEEA;">⏱️ <span id="hudTimer">0s</span></div>
+            </div>
+        </div>
+
+        <!-- 1. MODAL START MENU -->
+        <div class="game-modal" id="modalStart">
+            <div class="modal-card">
+                <div style="font-size: 3rem; margin-bottom: 6px;">🐒🌿</div>
+                <h2 class="modal-title">BEKANTAN QUEST</h2>
+                <p class="modal-desc">
+                    Selamatkan habitat lahan basah Kalimantan! Bantu sang Bekantan mengumpulkan <b>Buah Rambai</b> dan <b>Intan Martapura</b> sambil menghindari jebakan duri dan musuh patroli.
+                </p>
+
+                <div class="controls-guide">
+                    <div>🎮 <b>Tombol Panah / A-D</b> : Lari Kiri & Kanan</div>
+                    <div>🚀 <b>Spasi / W / K</b> : Lompat & Double Jump di Udara</div>
+                    <div>⚡ <b>Shift / X / J</b> : Melesat Kilat (Air Dash)</div>
+                    <div>🍄 <b>Jamur Merah</b> : Pantulan Super Tinggi</div>
+                    <div>🦀 <b>Injak Musuh</b> : Lompati kepala musuh untuk menyingkirkannya!</div>
+                </div>
+
+                <button class="btn-primary" id="btnStartGame">▶️ MULAI PETUALANGAN</button>
+            </div>
+        </div>
+
+        <!-- 2. MODAL PAUSE -->
+        <div class="game-modal hidden" id="modalPause">
+            <div class="modal-card">
+                <h2 class="modal-title">⏸️ GAME DIJEDA</h2>
+                <p class="modal-desc">Tekan <b>P</b> atau <b>Esc</b> untuk melanjutkan permainan.</p>
+                <button class="btn-primary" onclick="window.gameInstance.togglePause()">Lanjutkan</button>
+            </div>
+        </div>
+
+        <!-- 3. MODAL LEVEL COMPLETE -->
+        <div class="game-modal hidden" id="modalLevelComplete">
+            <div class="modal-card">
+                <div style="font-size: 2.5rem; margin-bottom: 6px;">🌟🏆🌟</div>
+                <h2 class="modal-title" id="completeLevelTitle">Level Selesai!</h2>
+                <p class="modal-desc">Gerbang konservasi berhasil diaktifkan dengan selamat!</p>
+                
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="label">Bonus Waktu</div>
+                        <div class="val" id="completeBonus">+250</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="label">Total Skor</div>
+                        <div class="val" id="completeScore">1450</div>
+                    </div>
+                </div>
+
+                <button class="btn-primary" id="btnNextLevel">Lanjut ke Level Berikutnya ⏩</button>
+            </div>
+        </div>
+
+        <!-- 4. MODAL GAME OVER -->
+        <div class="game-modal hidden" id="modalGameOver">
+            <div class="modal-card">
+                <div style="font-size: 2.5rem; margin-bottom: 6px;">💀💧</div>
+                <h2 class="modal-title" style="color: #FF5252;">PETUALANGAN GAGAL</h2>
+                <p class="modal-desc">Bekantan kehabisan energi di tengah rimba. Jangan menyerah, coba lagi!</p>
+                
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="label">Skor Akhir</div>
+                        <div class="val" id="finalScoreOver">800</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="label">Skor Tertinggi</div>
+                        <div class="val" id="hudHighScore">0</div>
+                    </div>
+                </div>
+
+                <button class="btn-primary" id="btnRetry">🔄 Coba Lagi dari Checkpoint</button>
+            </div>
+        </div>
+
+        <!-- 5. MODAL GAME WIN (ALL LEVELS COMPLETED) -->
+        <div class="game-modal hidden" id="modalGameWin">
+            <div class="modal-card">
+                <div style="font-size: 3rem; margin-bottom: 6px;">👑🐒💎</div>
+                <h2 class="modal-title" style="color: #00E676;">SELAMAT! MISI SUKSES</h2>
+                <p class="modal-desc">
+                    Kamu berhasil menyelamatkan ekosistem lahan basah dari muara Barito hingga puncak Meratus!
+                </p>
+                
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="label">Total Skor Akhir</div>
+                        <div class="val" id="winScore">5200</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="label">Buah Dikumpulkan</div>
+                        <div class="val" id="winFruits">24 🍎</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="label">Intan Martapura</div>
+                        <div class="val" id="winDiamonds">6 💎</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="label">Gelar Juara</div>
+                        <div class="val" style="color: #FFD700;">Guardian of ULM</div>
+                    </div>
+                </div>
+
+                <button class="btn-primary" id="btnPlayAgain">🔄 Main Ulang Petualangan</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Mobile Virtual Touch Controls -->
+    <div class="touch-controls" id="touchControls">
+        <div class="touch-dpad">
+            <button class="touch-btn" id="btnTouchLeft" aria-label="Kiri">◀</button>
+            <button class="touch-btn" id="btnTouchRight" aria-label="Kanan">▶</button>
+        </div>
+        <div class="touch-actions">
+            <button class="touch-btn btn-action-b" id="btnTouchDash" aria-label="Dash">⚡</button>
+            <button class="touch-btn btn-action-a" id="btnTouchJump" aria-label="Lompat">▲</button>
+        </div>
+    </div>
+
+    <!-- Footer & Academic Info -->
+    <footer class="game-footer">
+        <p><b>Mata Kuliah:</b> STI7356 — Pengembangan Aplikasi Game (3 SKS)</p>
+        <p>Program Studi Teknologi Informasi · Fakultas Teknik · Universitas Lambung Mangkurat</p>
+        <p style="margin-top: 4px; font-size: 0.72rem;">Dibuat untuk tugas & demonstrasi konsep: Game Loop, AABB Physics, Finite State Machine, Audio Synth, dan Level Design 2D.</p>
+    </footer>
+
+    <!-- Game Scripts (Loaded in sequential dependency order) -->
+    <script src="./js/audio.js"></script>
+    <script src="./js/physics.js"></script>
+    <script src="./js/particles.js"></script>
+    <script src="./js/entities.js"></script>
+    <script src="./js/levels.js"></script>
+    <script src="./js/renderer.js"></script>
+    <script src="./js/game.js"></script>
+</body>
+</html>
