@@ -353,6 +353,91 @@ class SoundSystem {
         tick();
     }
 
+    playQuizPopup() {
+        if (this.isMuted || !this.ctx) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(440, now);
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.15);
+
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+
+        osc.connect(gain);
+        gain.connect(this.sfxGainNode);
+
+        osc.start(now);
+        osc.stop(now + 0.16);
+    }
+
+    playQuizTick() {
+        if (this.isMuted || !this.ctx) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(800, now);
+
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+
+        osc.connect(gain);
+        gain.connect(this.sfxGainNode);
+
+        osc.start(now);
+        osc.stop(now + 0.05);
+    }
+
+    playQuizCorrect() {
+        if (this.isMuted || !this.ctx) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        
+        [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, now + i * 0.08);
+
+            gain.gain.setValueAtTime(0.18, now + i * 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.08 + 0.15);
+
+            osc.connect(gain);
+            gain.connect(this.sfxGainNode);
+
+            osc.start(now + i * 0.08);
+            osc.stop(now + i * 0.08 + 0.16);
+        });
+    }
+
+    playQuizWrong() {
+        if (this.isMuted || !this.ctx) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.exponentialRampToValueAtTime(110, now + 0.28);
+
+        gain.gain.setValueAtTime(0.22, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.28);
+
+        osc.connect(gain);
+        gain.connect(this.sfxGainNode);
+
+        osc.start(now);
+        osc.stop(now + 0.29);
+    }
+
     stopBGM() {
         this.bgmPlaying = false;
         if (this.bgmTimer) {

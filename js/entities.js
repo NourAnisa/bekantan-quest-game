@@ -250,6 +250,15 @@ class Collectible extends Entity {
         this.y = this.startY + Math.sin(this.floatOffset) * 5;
     }
 
+    getBounds() {
+        return {
+            x: this.x - 4,
+            y: this.y - 8,
+            width: this.width + 8,
+            height: this.height + 14
+        };
+    }
+
     onCollect(player, particles, sound) {
         if (this.collected) return;
         this.collected = true;

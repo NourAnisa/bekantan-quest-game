@@ -151,6 +151,39 @@
                 <button class="btn-primary" id="btnPlayAgain">🔄 Main Ulang Petualangan</button>
             </div>
         </div>
+
+        <!-- 6. MODAL INTERACTIVE QUIZ (Matematika & IPA/IPS/Sejarah) -->
+        <div class="game-modal hidden" id="modalQuiz">
+            <div class="modal-card quiz-card">
+                <div class="quiz-header-row">
+                    <span id="quizCategory" class="quiz-category-badge badge-math">Perkalian Dasar</span>
+                    <div class="quiz-timer-wrap">
+                        <span class="quiz-timer-icon">⏱️</span>
+                        <span id="quizTimerText" class="quiz-timer-text">10s</span>
+                    </div>
+                </div>
+
+                <div class="quiz-timer-track">
+                    <div id="quizTimerBar" class="quiz-timer-progress"></div>
+                </div>
+
+                <h2 class="modal-title quiz-title" id="quizTitle">TANTANGAN EDUKASI</h2>
+
+                <div class="quiz-question-box">
+                    <p id="quizQuestion" class="quiz-question-text">Berapakah hasil dari: 7 × 8 ?</p>
+                </div>
+
+                <div id="quizOptions" class="quiz-options-grid">
+                    <!-- Dynamic Buttons -->
+                </div>
+
+                <div id="quizFeedback" class="quiz-feedback hidden"></div>
+
+                <div class="quiz-hint-footer">
+                    💡 Pilih jawaban dengan klik atau tekan angka <b>1 - 4</b> / huruf <b>A - D</b> di keyboard!
+                </div>
+            </div>
+        </div>
     </main>
 
     <!-- Mobile Virtual Touch Controls -->
@@ -179,6 +212,7 @@
     <script src="./js/entities.js"></script>
     <script src="./js/levels.js"></script>
     <script src="./js/renderer.js"></script>
+    <script src="./js/quiz.js"></script>
     <script src="./js/game.js"></script>
 </body>
 </html>

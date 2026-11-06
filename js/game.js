@@ -19,6 +19,7 @@ class Game {
         this.camera = new Camera(this.canvas.width, this.canvas.height);
         this.particles = new ParticleSystem();
         this.sound = window.soundSystem;
+        this.quiz = new QuizSystem(this);
 
         this.state = 'MENU'; // 'MENU', 'PLAYING', 'PAUSED', 'LEVEL_COMPLETE', 'GAME_OVER', 'GAME_WIN'
         this.currentLevelIndex = 0;
@@ -222,7 +223,7 @@ class Game {
             return;
         }
 
-        // 3. Update Enemies & Interaksi Stomp / Tabrakan
+        // 3. Update Enemies & Interaksi Stomp / Tabrakan Kuis Pengetahuan
         const playerBounds = this.player.getBounds();
         for (const enemy of this.currentLevel.enemies) {
             if (enemy.isDead) continue;
@@ -236,18 +237,65 @@ class Game {
 
                 if (isFallingOnTop) {
                     enemy.stomp(this.player, this.particles, this.sound);
-                } else {
-                    this.player.takeDamage(1, 'enemy');
+                } else if (this.player.invulnerableTimer <= 0 && !this.player.isGodMode) {
+                    // Terkena tabrakan musuh memicu kuis tantangan IPA / IPS / Sejarah
+                    this.state = 'QUIZ';
+                    this.quiz.startEnemyQuiz(enemy, (success) => {
+                        this.state = 'PLAYING';
+                        if (success) {
+                            // Jawaban benar: Tangkis serangan & kalahkan musuh!
+                            enemy.isDead = true;
+                            this.player.score += 150;
+                            this.player.invulnerableTimer = 1.2;
+                            this.sound.playBounce();
+                            this.particles.emitSparkle(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, '#00E5FF', 16);
+                            this.particles.addPopup(this.player.x + this.player.width / 2, this.player.y - 12, 'TANGKISAN SUKSES! +150', '#00E5FF', 15);
+                        } else {
+                            // Gagal atau waktu habis: Nyawa berkurang akibat serangan musuh
+                            this.player.takeDamage(1, 'enemy');
+                            this.particles.addPopup(this.player.x + this.player.width / 2, this.player.y - 12, 'SERANGAN MASUK! -1 NYAWA', '#FF5252', 15);
+                        }
+                        this.updateHUD();
+                        if (this.player.health <= 0 || this.player.isDead) {
+                            this.showGameOver();
+                        }
+                    });
                 }
             }
         }
 
-        // 4. Update Collectibles
+        // 4. Update Collectibles (Buah memicu Hitung Matematika 10 Detik)
         for (const item of this.currentLevel.collectibles) {
-            if (item.isDead) continue;
+            if (item.isDead || item.collected) continue;
             item.update(dt);
             if (Physics.checkAABB(playerBounds, item.getBounds())) {
-                item.onCollect(this.player, this.particles, this.sound);
+                if (item.subType === 'fruit') {
+                    // Termakan buah memicu kuis perkalian & pembagian 10 detik
+                    item.collected = true;
+                    item.isDead = true;
+                    this.state = 'QUIZ';
+                    this.quiz.startFruitQuiz((success) => {
+                        this.state = 'PLAYING';
+                        if (success) {
+                            // Jawaban Benar: Buah termakan sempurna & bonus skor
+                            this.player.score += 200;
+                            this.player.fruits += 1;
+                            this.sound.playCollect();
+                            this.particles.emitSparkle(item.x + 11, item.y + 11, '#FFCA28', 16);
+                            this.particles.addPopup(item.x + 11, item.y - 10, '+200 BENAR! 🍎', '#FFD54F', 15);
+                        } else {
+                            // Gagal atau waktu habis: buah hilang dan nyawa berkurang 1
+                            this.player.takeDamage(1, 'quiz_fail');
+                            this.particles.addPopup(this.player.x + this.player.width / 2, this.player.y - 10, 'SALAH! -1 NYAWA 💔', '#FF5252', 15);
+                        }
+                        this.updateHUD();
+                        if (this.player.health <= 0 || this.player.isDead) {
+                            this.showGameOver();
+                        }
+                    });
+                } else {
+                    item.onCollect(this.player, this.particles, this.sound);
+                }
             }
         }
 
@@ -355,6 +403,10 @@ class Game {
     hideAllModals() {
         const modals = document.querySelectorAll('.game-modal');
         modals.forEach(m => m.classList.add('hidden'));
+        if (this.quiz) {
+            clearInterval(this.quiz.timerInterval);
+            this.quiz.isActive = false;
+        }
     }
 
     startLoop() {
